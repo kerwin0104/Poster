@@ -23,6 +23,7 @@
 
 		return handler.id;
 	};
+	
 	rpc.callCallbackWithId = function rpcCallCallbackWithId (callbackId, err, args) {
 		const handler = this.callbackHandlers[callbackId];
 		if (args) {
