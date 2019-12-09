@@ -1,5 +1,5 @@
 // 系统基础库
-(function () {
+(function (window) {
 	window.rpc = {}
 	rpc.globalHandlerId = 0;
 	rpc.globalMessageId = 0;
@@ -46,19 +46,44 @@
 	  		window.webkit.messageHandlers.rpc.postMessage(JSON.stringify(data));
 	  	}
 	}
-	// // 注册native消息
-	// var nativeEventCenter = rpc.nativeEventCenter = {};
-	// nativeEventCenter.eventHandlers = {};
-	// messageCenter.on = function (viewId, event, callback) {
-	// 	var eventHandlers = nativeEventCenter.eventHandlers
-	// 	if (eventHandlers) {
-
-	// 	}
-	// }
-	// messageCenter.off = function (viewId, event, callback) {
-		
-	// }
-})();
+	
+	var nativeViewEvents = {};
+	var nativeViewEventCenter = {};
+	nativeViewEventCenter.getEventsByViewId = function (viewId) {
+		if (!nativeViewEvents[viewId]) {
+			nativeViewEvents[viewId] = {}
+		}
+		return nativeViewEvents[viewId];
+	}
+	nativeViewEventCenter.on = function (viewId, eventName, callback) {
+		var events = this.getEventsByViewId(viewId);
+		if (!events[eventName]) {
+			events[eventName] = [];
+		}
+		events[eventName].push({
+			viewId: viewId,
+			callback: callback,
+		});
+	}
+	nativeViewEventCenter.off = function (viewId, eventName) {
+		if (eventName) {
+			var events = this.getEventsByViewId(viewId);
+			delete events[eventName];
+		} else {
+			delete nativeViewEvents[viewId];
+		}
+	}
+	nativeViewEventCenter.trigger = function (viewId, eventName, event) {
+		var events = this.getEventsByViewId(viewId);
+		var handlers = events[eventName];
+		if (handlers && handlers.length) {
+			handlers.forEach((handler) => {
+				handler.callback(event);
+			});
+		}
+	}
+	window.nativeViewEventCenter = nativeViewEventCenter;
+})(window);
 
 
 
@@ -66,12 +91,15 @@
 
 // 用户业务代码
 Vue.component('native-input', {
+  model: {
+    prop: 'value',
+    event: 'input'
+  },
   props: {
   	value: String
   },
   methods: {
   	foucs() {
-
   	}
   },
   mounted: function () {
@@ -81,16 +109,19 @@ Vue.component('native-input', {
   	style.y = el.offsetTop;
   	style.width = el.offsetWidth;
   	style.height = el.offsetHeight;
-  	rpc.call('log', '342432');
-  	rpc.call('layout-input', style, function (err, args) {
+  	rpc.call('layout-input', style, (err, viewId) => {
   		if (err) {
   			rpc.call('log', 'error');
   		} else {
-  			rpc.call('log', 'success');
+  			rpc.call('log', 'success: ' + viewId);
+  			nativeViewEventCenter.on(viewId, 'input', (value) => {
+  				rpc.call('log', 'input: ' + value);
+  				this.$emit('input', value);
+  			});
   		}	
 	});
   },
-  template: '<div ref="el" style="border:1px solid #333; width: 200px; height: 30px; cursor: pointer;" @foucs="foucs">这里是个input</div>'
+  template: '<div ref="el" style="border:1px solid #333; width: 200px; height: 30px; cursor: pointer;" @foucs="foucs">{{value}}</div>'
 })
 
 const Home = { 
@@ -102,7 +133,12 @@ const Home = {
 	}
 }
 const InputDemo = { 
-	template: '<div><h3>input-demo page</h3><native-input /><a @click="toOther" href="javascript:;">去另一个页面</a></div>', 
+	data() {
+		var data = {};
+		data.inputValue = 'test';
+		return data;
+	},
+	template: '<div><h3>input-demo page</h3><native-input v-model="inputValue" /><a @click="toOther" href="javascript:;">去另一个页面</a></div>', 
 	methods: {
 		toOther () {
 			rpc.call('navigateTo', '/home');

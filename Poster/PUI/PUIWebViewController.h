@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <WebKit/WebKit.h>
+#import "PUITextField.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) loadMiniProgramWithString:(NSString *)urlString;
 - (void) loadNormalWebPageWithString:(NSString *)urlString;
 - (void) changeMiniProgramRoute:(NSString *)pathString;
-- (void) inputValueChange:(UITextField *)textField;
+- (void) inputValueChange:(PUITextField *)puiTextField;
 
 @end
 

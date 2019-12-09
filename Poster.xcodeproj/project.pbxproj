@@ -15,6 +15,7 @@
 		96E6052A2395FF4800563650 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E605292395FF4800563650 /* main.m */; };
 		96E605342395FF4800563650 /* PosterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E605332395FF4800563650 /* PosterTests.m */; };
 		96E6053F2395FF4800563650 /* PosterUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6053E2395FF4800563650 /* PosterUITests.m */; };
+		96F7F8B5239D3F5F00FED365 /* PUITextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 96F7F8B4239D3F5F00FED365 /* PUITextField.m */; };
 		96FA35B4239600B5008CBCAE /* PUIWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96FA35B3239600B5008CBCAE /* PUIWebViewController.m */; };
 		96FA35CC2396596B008CBCAE /* www in Resources */ = {isa = PBXBuildFile; fileRef = 96FA35CB2396596B008CBCAE /* www */; };
 /* End PBXBuildFile section */
@@ -53,6 +54,8 @@
 		96E6053A2395FF4800563650 /* PosterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PosterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E6053E2395FF4800563650 /* PosterUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PosterUITests.m; sourceTree = "<group>"; };
 		96E605402395FF4800563650 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		96F7F8B3239D3F5F00FED365 /* PUITextField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUITextField.h; path = PUI/PUITextField.h; sourceTree = "<group>"; };
+		96F7F8B4239D3F5F00FED365 /* PUITextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUITextField.m; path = PUI/PUITextField.m; sourceTree = "<group>"; };
 		96FA35B2239600B5008CBCAE /* PUIWebViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUIWebViewController.h; path = PUI/PUIWebViewController.h; sourceTree = "<group>"; };
 		96FA35B3239600B5008CBCAE /* PUIWebViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUIWebViewController.m; path = PUI/PUIWebViewController.m; sourceTree = "<group>"; };
 		96FA35CB2396596B008CBCAE /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
@@ -144,6 +147,8 @@
 			children = (
 				96FA35B2239600B5008CBCAE /* PUIWebViewController.h */,
 				96FA35B3239600B5008CBCAE /* PUIWebViewController.m */,
+				96F7F8B3239D3F5F00FED365 /* PUITextField.h */,
+				96F7F8B4239D3F5F00FED365 /* PUITextField.m */,
 			);
 			name = PUI;
 			sourceTree = "<group>";
@@ -283,6 +288,7 @@
 				96E6051F2395FF4500563650 /* ViewController.m in Sources */,
 				96E6052A2395FF4800563650 /* main.m in Sources */,
 				96E6051C2395FF4500563650 /* AppDelegate.m in Sources */,
+				96F7F8B5239D3F5F00FED365 /* PUITextField.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

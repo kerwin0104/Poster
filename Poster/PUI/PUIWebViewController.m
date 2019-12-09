@@ -67,7 +67,7 @@ uint coverViewId = 0;
         }
         
         if ([[dict objectForKey:@"method"] isEqualToString:@"layout-input"]) {
-            UITextField *input = [[UITextField alloc] init];
+            PUITextField *input = [[PUITextField alloc] init];
             NSDictionary *style = [dict objectForKey:@"args"];
             float x = [[style objectForKey:@"x"] floatValue];
             float y = [[style objectForKey:@"y"] floatValue];
@@ -80,12 +80,13 @@ uint coverViewId = 0;
             [input addTarget:self action:@selector(inputValueChange:) forControlEvents:UIControlEventEditingChanged];
             [_webview.scrollView addSubview:input];
             
-            NSString *viewId = [NSString stringWithFormat:@"view-id-%ui", coverViewId++];
+            NSString *viewId = [NSString stringWithFormat:@"view-id-%u", coverViewId++];
+            input.viewId = viewId;
             [_coverViewsWithKeyValue setObject:input forKey:viewId];
             
             // 创建组件成功之后，给webview回调通知
             if ([dict objectForKey:@"callbackHandlerId"]) {
-                NSString *handlerString = [NSString stringWithFormat:@"rpc.callCallbackWithId('%@', null)", [dict objectForKey:@"callbackHandlerId"]];
+                NSString *handlerString = [NSString stringWithFormat:@"rpc.callCallbackWithId('%@', null, '%@')", [dict objectForKey:@"callbackHandlerId"], viewId];
                 [_webview evaluateJavaScript:handlerString completionHandler:nil];
             }
         }
@@ -147,18 +148,19 @@ uint coverViewId = 0;
         _webview = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:_webviewConfig];
         _webview.navigationDelegate = self;
         _webview.UIDelegate = self;
-        [_webview addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:@"DJWebKitContext"];
+        [_webview addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew context:@"WebKitContext"];
     }
 }
 
-- (void)inputValueChange:(UITextField *)textField {
-    NSLog(@"inputValueChange ===  %@", textField.text);
+- (void)inputValueChange:(PUITextField *)puiTextField {
+    NSLog(@"inputValueChange viewIdf: %@  value: %@", puiTextField.viewId, puiTextField.text);
+    [_webview evaluateJavaScript:[NSString stringWithFormat:@"nativeViewEventCenter.trigger('%@', 'input', '%@');" , puiTextField.viewId, puiTextField.text] completionHandler:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (context == @"DJWebKitContext") {
-        NSLog(@"DJWebKitContext object %@ change %@", object, change);
+    if (context == @"WebKitContext") {
+        NSLog(@"WebKitContext object %@ change %@", object, change);
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
