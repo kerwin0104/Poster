@@ -75,6 +75,7 @@
 	}
 	nativeViewEventCenter.trigger = function (viewId, eventName, event) {
 		var events = this.getEventsByViewId(viewId);
+ 
 		var handlers = events[eventName];
 		if (handlers && handlers.length) {
 			handlers.forEach((handler) => {
@@ -89,39 +90,72 @@
 
 
 
+
 // 用户业务代码
 Vue.component('native-input', {
   model: {
     prop: 'value',
-    event: 'input'
+    event: 'input',
   },
   props: {
   	value: String
   },
+  data() {
+	  const data = {};
+	  data.updateTimestamp = 0;
+	  data.updateTimer = null;
+	  return data;
+  },
   methods: {
   	foucs() {
-  	}
+  	},
+    getStyle() {
+        const el = this.$refs.el;
+        const style = {};
+        style.x = el.offsetLeft;
+        style.y = el.offsetTop;
+        style.width = el.offsetWidth;
+        style.height = el.offsetHeight;
+        return style;
+    },
+    updateNativeView() {
+        rpc.call('update-view', {
+            viewId: this.viewId,
+            style: this.getStyle(),
+        });
+        this.updateTimestamp = +new Date;
+    }
   },
   mounted: function () {
-  	const el = this.$refs.el;
-  	const style = {};
-  	style.x = el.offsetLeft;
-  	style.y = el.offsetTop;
-  	style.width = el.offsetWidth;
-  	style.height = el.offsetHeight;
-  	rpc.call('layout-input', style, (err, viewId) => {
+  	rpc.call('layout-input', this.getStyle(), (err, viewId) => {
   		if (err) {
   			rpc.call('log', 'error');
   		} else {
   			rpc.call('log', 'success: ' + viewId);
+  			this.viewId = viewId;
   			nativeViewEventCenter.on(viewId, 'input', (value) => {
   				rpc.call('log', 'input: ' + value);
   				this.$emit('input', value);
   			});
+  			setInterval(() => {
+  				this.$refs.el.style.marginTop = (Math.random() * 200) + 'px';
+  			}, 1000);
   		}	
 	});
+    nativeViewEventCenter.on(-9999, 'rerender', () => {
+        var now = +new Date;
+        var diffTime = now - this.updateTimestamp;
+        if (diffTime < 100) {
+            clearTimeout(this.updateTimer);
+            this.updateTimer = setTimeout(() => {
+                this.updateNativeView();                                       
+            }, diffTime);
+        } else {
+        	this.updateNativeView();
+        }
+    })
   },
-  template: '<div ref="el" style="border:1px solid #333; width: 200px; height: 30px; cursor: pointer;" @foucs="foucs">{{value}}</div>'
+  template: '<div ref="el" style="border:1px solid #333; width: 200px; height: 30px; cursor: pointer; margin-top: 100px;" @foucs="foucs">{{value}}</div>'
 })
 
 const Home = { 

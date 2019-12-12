@@ -76,6 +76,7 @@ uint coverViewId = 0;
             [input setFrame:CGRectMake(x, y, width, height)];
             [input setBackgroundColor: [UIColor colorWithRed:1 green:0 blue:0 alpha:0.5]];
             input.autocorrectionType = UITextAutocapitalizationTypeNone;
+//            [input becomeFirstResponder];
 //            input.hidden = YES;
             [input addTarget:self action:@selector(inputValueChange:) forControlEvents:UIControlEventEditingChanged];
             [_webview.scrollView addSubview:input];
@@ -90,6 +91,23 @@ uint coverViewId = 0;
                 [_webview evaluateJavaScript:handlerString completionHandler:nil];
             }
         }
+        if ([[dict objectForKey:@"method"] isEqualToString:@"update-view"]) {
+            NSDictionary *args = [dict objectForKey:@"args"];
+            if (args != nil) {
+                NSString *viewId = [args objectForKey:@"viewId"];
+                NSDictionary *style = [args objectForKey:@"style"];
+                UIView *view = [_coverViewsWithKeyValue objectForKey:viewId];
+                if ([view isKindOfClass:[UIView class]]  && [style isKindOfClass:[NSDictionary class]]) {
+                    float x = [[style objectForKey:@"x"] floatValue];
+                    float y = [[style objectForKey:@"y"] floatValue];
+                    float width = [[style objectForKey:@"width"] floatValue];
+                    float height = [[style objectForKey:@"height"] floatValue];
+                    [view setFrame:CGRectMake(x, y, width, height)];
+                    NSLog(@"update ............. view ...........");
+                }
+            }
+        }
+        
     } else if ([message.name isEqualToString:@"DocumentReady"]) {
         _isDocumentReady = YES;
         [_webview evaluateJavaScript:[NSString stringWithFormat:@"location.href='#%@';", _miniProgramPath] completionHandler:nil];
@@ -160,7 +178,8 @@ uint coverViewId = 0;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if (context == @"WebKitContext") {
-        NSLog(@"WebKitContext object %@ change %@", object, change);
+        // NSLog(@"WebKitContext object %@ change %@", object, change);
+        [_webview evaluateJavaScript:[NSString stringWithFormat:@"nativeViewEventCenter.trigger('-9999', 'rerender');"] completionHandler:nil];
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
