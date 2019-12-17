@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <WebKit/WebKit.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 #import "PUITextField.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -18,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong, nonatomic) WKWebView *webview;
 @property (strong, nonatomic) WKWebViewConfiguration *webviewConfig;
 @property (strong, nonatomic) WKUserContentController *userContentController;
-@property (strong, nonatomic) WKUserScript *script;
+@property (strong, nonatomic) JSContext *jsContext;
 @property (strong, nonatomic) NSString *url;
 @property (strong, nonatomic) NSString *miniProgramPath;
 @property (strong, nonatomic) NSMutableDictionary *coverViewsWithKeyValue;
@@ -27,6 +28,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithURLString:(NSString *)urlString;
 - (void) initWebView;
+- (void) initJSContext;
+- (void) addScriptMessageHandlers:(WKUserContentController *)userContentController;
+- (void) injectBaseScript:(WKUserContentController *)userContentController;
+- (void) injectReadyScript:(WKUserContentController *)userContentController;
 - (void) loadURLWithString:(NSString *)urlString;
 - (void) loadMiniProgramWithString:(NSString *)urlString;
 - (void) loadNormalWebPageWithString:(NSString *)urlString;

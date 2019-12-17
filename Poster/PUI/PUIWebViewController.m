@@ -7,6 +7,7 @@
 //
 
 #import "PUIWebViewController.h"
+#import "PUIUtil.h"
 
 uint coverViewId = 0;
 
@@ -19,12 +20,63 @@ uint coverViewId = 0;
 - (instancetype)initWithURLString:(NSString *)urlString {
     self = [super init];
     if (self) {
-        _coverViewsWithKeyValue = [NSMutableDictionary dictionary]; 
+        _coverViewsWithKeyValue = [NSMutableDictionary dictionary];
+        [self initJSContext];
         [self initWebView];
         [self loadURLWithString:urlString];
     }
     return self;
 }
+
+
+/* 初始化webview */
+- (void)initWebView {
+    if (_webview == nil) {
+        _webviewConfig = [[WKWebViewConfiguration alloc] init];
+        _userContentController = [[WKUserContentController alloc] init];
+        _webviewConfig.userContentController = _userContentController;
+        
+        [self addScriptMessageHandlers:_userContentController];
+        [self injectBaseScript:_userContentController];
+        [self injectReadyScript:_userContentController];
+        
+        _webview = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:_webviewConfig];
+        _webview.navigationDelegate = self;
+        _webview.UIDelegate = self;
+        [_webview addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew context:@"WebKitContext"];
+    }
+}
+
+- (void)addScriptMessageHandlers:(WKUserContentController *)userContentController {
+    [userContentController addScriptMessageHandler:self name:@"rpc"];
+    [userContentController addScriptMessageHandler:self name:@"DocumentReady"];
+}
+
+- (void)injectBaseScript:(WKUserContentController *)userContentController {
+    NSString *content = [PUIUtil readScriptWithPath:@"www/script/base"];
+    WKUserScript *baseScript = [[WKUserScript alloc] initWithSource:content injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+    [userContentController addUserScript:baseScript];
+}
+
+- (void)injectReadyScript:(WKUserContentController *)userContentController {
+    NSString *scriptString = @"window.webkit.messageHandlers.DocumentReady.postMessage('');";
+    WKUserScript *readyScript = [[WKUserScript alloc] initWithSource:scriptString injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+    [userContentController addUserScript:readyScript];
+}
+// https://github.com/marcuswestin/WebViewJavascriptBridge
+/* /初始化webview */
+
+/* 初始化jscore*/
+- (void)initJSContext {
+    _jsContext = [[JSContext alloc] init];
+    _jsContext[@"postMessage"] = ^(NSString *message, NSString *args){
+        NSLog(@"jscontext message:%@, args:%@", message, args);
+    };
+    NSString *content = [PUIUtil readScriptWithPath:@"www/script/base"];
+    [_jsContext evaluateScript:content];
+}
+/* /初始化jscore*/
+
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
@@ -44,8 +96,6 @@ uint coverViewId = 0;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.navigationItem.title = @"hybrid";
-//    [self.navigationController setDelegate:self];
 }
 
 //JS调用的OC回调方法
@@ -93,7 +143,7 @@ uint coverViewId = 0;
         }
         if ([[dict objectForKey:@"method"] isEqualToString:@"update-view"]) {
             NSDictionary *args = [dict objectForKey:@"args"];
-            if (args != nil) {
+            if ([args isKindOfClass:[NSDictionary class]]) {
                 NSString *viewId = [args objectForKey:@"viewId"];
                 NSDictionary *style = [args objectForKey:@"style"];
                 UIView *view = [_coverViewsWithKeyValue objectForKey:viewId];
@@ -151,24 +201,10 @@ uint coverViewId = 0;
     }
 }
 
-- (void)initWebView {
-    if (_webview == nil) {
-        _webviewConfig = [[WKWebViewConfiguration alloc] init];
-        _userContentController = [[WKUserContentController alloc] init];
-        _webviewConfig.userContentController = _userContentController;
-        
-        [_userContentController addScriptMessageHandler:self name:@"rpc"];
-        [_userContentController addScriptMessageHandler:self name:@"DocumentReady"];
-        NSString *scriptString = @"window.webkit.messageHandlers.DocumentReady.postMessage('');";
-        _script = [[WKUserScript alloc] initWithSource:scriptString injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
-        [_userContentController addUserScript:_script];
-        
-        _webview = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:_webviewConfig];
-        _webview.navigationDelegate = self;
-        _webview.UIDelegate = self;
-        [_webview addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew context:@"WebKitContext"];
-    }
-}
+
+
+
+
 
 - (void)inputValueChange:(PUITextField *)puiTextField {
     NSLog(@"inputValueChange viewIdf: %@  value: %@", puiTextField.viewId, puiTextField.text);

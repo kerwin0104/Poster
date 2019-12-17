@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9628223B23A8B67900570DC1 /* PUIUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 9628223A23A8B67900570DC1 /* PUIUtil.m */; };
 		96E6051C2395FF4500563650 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051B2395FF4500563650 /* AppDelegate.m */; };
 		96E6051F2395FF4500563650 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051E2395FF4500563650 /* ViewController.m */; };
 		96E605222395FF4500563650 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 96E605202395FF4500563650 /* Main.storyboard */; };
@@ -38,6 +39,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9628223923A8B67900570DC1 /* PUIUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUIUtil.h; path = PUI/PUIUtil.h; sourceTree = "<group>"; };
+		9628223A23A8B67900570DC1 /* PUIUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUIUtil.m; path = PUI/PUIUtil.m; sourceTree = "<group>"; };
 		96E605172395FF4500563650 /* Poster.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Poster.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E6051A2395FF4500563650 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		96E6051B2395FF4500563650 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -149,6 +152,8 @@
 				96FA35B3239600B5008CBCAE /* PUIWebViewController.m */,
 				96F7F8B3239D3F5F00FED365 /* PUITextField.h */,
 				96F7F8B4239D3F5F00FED365 /* PUITextField.m */,
+				9628223923A8B67900570DC1 /* PUIUtil.h */,
+				9628223A23A8B67900570DC1 /* PUIUtil.m */,
 			);
 			name = PUI;
 			sourceTree = "<group>";
@@ -288,6 +293,7 @@
 				96E6051F2395FF4500563650 /* ViewController.m in Sources */,
 				96E6052A2395FF4800563650 /* main.m in Sources */,
 				96E6051C2395FF4500563650 /* AppDelegate.m in Sources */,
+				9628223B23A8B67900570DC1 /* PUIUtil.m in Sources */,
 				96F7F8B5239D3F5F00FED365 /* PUITextField.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
