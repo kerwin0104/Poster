@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface PUIUtil : NSObject
 
 + (NSString *) readScriptWithPath:(NSString *)path;
++ (NSDictionary *) parseNSStringToNSDictionary:(NSString *)jsonString;
 
 @end
 

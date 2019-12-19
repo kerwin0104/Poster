@@ -21,13 +21,11 @@ uint coverViewId = 0;
     self = [super init];
     if (self) {
         _coverViewsWithKeyValue = [NSMutableDictionary dictionary];
-        [self initJSContext];
         [self initWebView];
         [self loadURLWithString:urlString];
     }
     return self;
 }
-
 
 /* 初始化webview */
 - (void)initWebView {
@@ -37,7 +35,7 @@ uint coverViewId = 0;
         _webviewConfig.userContentController = _userContentController;
         
         [self addScriptMessageHandlers:_userContentController];
-        [self injectBaseScript:_userContentController];
+        [self injectWebViewBaseScript:_userContentController];
         [self injectReadyScript:_userContentController];
         
         _webview = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:_webviewConfig];
@@ -48,14 +46,19 @@ uint coverViewId = 0;
 }
 
 - (void)addScriptMessageHandlers:(WKUserContentController *)userContentController {
+    [userContentController addScriptMessageHandler:self name:@"message"];
     [userContentController addScriptMessageHandler:self name:@"rpc"];
     [userContentController addScriptMessageHandler:self name:@"DocumentReady"];
 }
 
-- (void)injectBaseScript:(WKUserContentController *)userContentController {
-    NSString *content = [PUIUtil readScriptWithPath:@"www/script/base"];
-    WKUserScript *baseScript = [[WKUserScript alloc] initWithSource:content injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+- (void)injectWebViewBaseScript:(WKUserContentController *)userContentController {
+    NSString *baseStr = [PUIUtil readScriptWithPath:@"www/script/base"];
+    WKUserScript *baseScript = [[WKUserScript alloc] initWithSource:baseStr injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
     [userContentController addUserScript:baseScript];
+    
+    NSString *baseWebviewStr = [PUIUtil readScriptWithPath:@"www/script/webviewBase"];
+    WKUserScript *baseWebviewScript = [[WKUserScript alloc] initWithSource:baseWebviewStr injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+    [userContentController addUserScript:baseWebviewScript];
 }
 
 - (void)injectReadyScript:(WKUserContentController *)userContentController {
@@ -66,16 +69,52 @@ uint coverViewId = 0;
 // https://github.com/marcuswestin/WebViewJavascriptBridge
 /* /初始化webview */
 
-/* 初始化jscore*/
+/* 初始化jscore */
 - (void)initJSContext {
+    __weak typeof(self) weakSelf = self;
     _jsContext = [[JSContext alloc] init];
-    _jsContext[@"postMessage"] = ^(NSString *message, NSString *args){
-        NSLog(@"jscontext message:%@, args:%@", message, args);
+    _jsContext.exceptionHandler = ^(JSContext *context, JSValue *exceptionValue) {
+        NSLog(@"异常信息：%@", exceptionValue);
     };
-    NSString *content = [PUIUtil readScriptWithPath:@"www/script/base"];
-    [_jsContext evaluateScript:content];
+    _jsContext[@"postMessage"] = ^(NSString *type, NSString *args){
+        NSLog(@"jscontext type:%@, args:%@", type, args);
+        if ([type isEqualToString:@"message"]) {
+            if (weakSelf != nil) {
+                [weakSelf dispenseMessage:args];
+            }
+        }
+    };
+    NSString *baseStr = [PUIUtil readScriptWithPath:@"www/script/base"];
+    [_jsContext evaluateScript:baseStr];
+    NSString *baseJSCoreStr = [PUIUtil readScriptWithPath:@"www/script/jsCoreBase"];
+    [_jsContext evaluateScript:baseJSCoreStr];
+    NSString *miniprogramStr = [PUIUtil readScriptWithPath:@"miniprogram/test/main"];
+    [_jsContext evaluateScript:miniprogramStr];
+    
 }
-/* /初始化jscore*/
+/* /初始化jscore */
+
+/* 消息传递 */
+- (void)dispenseMessage:(NSString *)message {
+    NSLog(@"dispenseMessage: %@", message);
+    NSDictionary *dict = [PUIUtil parseNSStringToNSDictionary:message];
+    NSString *to = [dict objectForKey:@"to"];
+    if ([to isEqualToString:@"WEBVIEW"]) {
+        [self sendMessageToWebview:message];
+    }
+    if ([to isEqualToString:@"JSCORE"]) {
+        [self sendMessageToJSContext:message];
+    }
+}
+- (void)sendMessageToWebview:(NSString *)message {
+    NSString *jsStr = [NSString stringWithFormat:@"tunnel.message.trigger('%@')", message];
+    [_webview evaluateJavaScript:jsStr completionHandler:nil];
+}
+- (void)sendMessageToJSContext:(NSString *)message {
+    NSString *jsStr = [NSString stringWithFormat:@"tunnel.message.trigger('%@')", message];
+    [_jsContext evaluateScript:jsStr];
+}
+/* /消息传递 */
 
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -89,13 +128,10 @@ uint coverViewId = 0;
         NSLog(@"New view controller was pushed");
     } else if ([viewControllers indexOfObject:self] == NSNotFound) {
         NSLog(@"View controller was popped");
+        [_userContentController removeScriptMessageHandlerForName:@"message"];
         [_userContentController removeScriptMessageHandlerForName:@"rpc"];
         [_userContentController removeScriptMessageHandlerForName:@"DocumentReady"];
     }
-}
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
 }
 
 //JS调用的OC回调方法
@@ -160,7 +196,15 @@ uint coverViewId = 0;
         
     } else if ([message.name isEqualToString:@"DocumentReady"]) {
         _isDocumentReady = YES;
+//        [self sendMessageToWebview:@"{fsjd:dfds}"];
+        [self initJSContext];
         [_webview evaluateJavaScript:[NSString stringWithFormat:@"location.href='#%@';", _miniProgramPath] completionHandler:nil];
+    } else if ([message.name isEqualToString:@"message"]) {
+        _isDocumentReady = YES;
+//        [self sendMessageToWebview:@"{fsjd:dfds}"];
+//        [_webview evaluateJavaScript:[NSString stringWithFormat:@"location.href='#%@';", _miniProgramPath] completionHandler:nil];
+        NSLog(@"message: %@", message.body);
+        [self dispenseMessage:message.body];
     }
 }
 

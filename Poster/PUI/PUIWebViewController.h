@@ -28,10 +28,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithURLString:(NSString *)urlString;
 - (void) initWebView;
-- (void) initJSContext;
 - (void) addScriptMessageHandlers:(WKUserContentController *)userContentController;
-- (void) injectBaseScript:(WKUserContentController *)userContentController;
+- (void) injectWebViewBaseScript:(WKUserContentController *)userContentController;
 - (void) injectReadyScript:(WKUserContentController *)userContentController;
+
+- (void) initJSContext;
+
+- (void) dispenseMessage:(NSString *)message;
+- (void) sendMessageToWebview:(NSString *)message;
+- (void) sendMessageToJSContext:(NSString *)message;
+- (void) sendMessageToNative:(NSString *)message;
+
 - (void) loadURLWithString:(NSString *)urlString;
 - (void) loadMiniProgramWithString:(NSString *)urlString;
 - (void) loadNormalWebPageWithString:(NSString *)urlString;

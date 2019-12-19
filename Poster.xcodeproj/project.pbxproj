@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9628223B23A8B67900570DC1 /* PUIUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 9628223A23A8B67900570DC1 /* PUIUtil.m */; };
+		9628223D23AA3E5F00570DC1 /* miniprogram in Resources */ = {isa = PBXBuildFile; fileRef = 9628223C23AA3E5F00570DC1 /* miniprogram */; };
 		96E6051C2395FF4500563650 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051B2395FF4500563650 /* AppDelegate.m */; };
 		96E6051F2395FF4500563650 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051E2395FF4500563650 /* ViewController.m */; };
 		96E605222395FF4500563650 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 96E605202395FF4500563650 /* Main.storyboard */; };
@@ -41,6 +42,7 @@
 /* Begin PBXFileReference section */
 		9628223923A8B67900570DC1 /* PUIUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUIUtil.h; path = PUI/PUIUtil.h; sourceTree = "<group>"; };
 		9628223A23A8B67900570DC1 /* PUIUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUIUtil.m; path = PUI/PUIUtil.m; sourceTree = "<group>"; };
+		9628223C23AA3E5F00570DC1 /* miniprogram */ = {isa = PBXFileReference; lastKnownFileType = folder; path = miniprogram; sourceTree = "<group>"; };
 		96E605172395FF4500563650 /* Poster.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Poster.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E6051A2395FF4500563650 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		96E6051B2395FF4500563650 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 		96E605192395FF4500563650 /* Poster */ = {
 			isa = PBXGroup;
 			children = (
+				9628223C23AA3E5F00570DC1 /* miniprogram */,
 				96FA35CB2396596B008CBCAE /* www */,
 				96FA35B12395FFAB008CBCAE /* PUI */,
 				96E6051A2395FF4500563650 /* AppDelegate.h */,
@@ -263,6 +266,7 @@
 			files = (
 				96FA35CC2396596B008CBCAE /* www in Resources */,
 				96E605272395FF4800563650 /* LaunchScreen.storyboard in Resources */,
+				9628223D23AA3E5F00570DC1 /* miniprogram in Resources */,
 				96E605242395FF4800563650 /* Assets.xcassets in Resources */,
 				96E605222395FF4500563650 /* Main.storyboard in Resources */,
 			);

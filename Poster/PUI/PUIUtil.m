@@ -16,4 +16,9 @@
     return content;
 }
 
++ (NSDictionary *)parseNSStringToNSDictionary:(NSString *)jsonString {
+    NSData *data = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    return [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+}
+
 @end
