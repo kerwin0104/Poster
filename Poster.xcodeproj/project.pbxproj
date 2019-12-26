@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		9628223B23A8B67900570DC1 /* PUIUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 9628223A23A8B67900570DC1 /* PUIUtil.m */; };
 		9628223D23AA3E5F00570DC1 /* miniprogram in Resources */ = {isa = PBXBuildFile; fileRef = 9628223C23AA3E5F00570DC1 /* miniprogram */; };
+		9628224023B0DFF700570DC1 /* PUINavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9628223F23B0DFF700570DC1 /* PUINavigationController.m */; };
 		96E6051C2395FF4500563650 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051B2395FF4500563650 /* AppDelegate.m */; };
 		96E6051F2395FF4500563650 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E6051E2395FF4500563650 /* ViewController.m */; };
 		96E605222395FF4500563650 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 96E605202395FF4500563650 /* Main.storyboard */; };
@@ -43,6 +44,8 @@
 		9628223923A8B67900570DC1 /* PUIUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUIUtil.h; path = PUI/PUIUtil.h; sourceTree = "<group>"; };
 		9628223A23A8B67900570DC1 /* PUIUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUIUtil.m; path = PUI/PUIUtil.m; sourceTree = "<group>"; };
 		9628223C23AA3E5F00570DC1 /* miniprogram */ = {isa = PBXFileReference; lastKnownFileType = folder; path = miniprogram; sourceTree = "<group>"; };
+		9628223E23B0DFF700570DC1 /* PUINavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PUINavigationController.h; path = PUI/PUINavigationController.h; sourceTree = "<group>"; };
+		9628223F23B0DFF700570DC1 /* PUINavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PUINavigationController.m; path = PUI/PUINavigationController.m; sourceTree = "<group>"; };
 		96E605172395FF4500563650 /* Poster.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Poster.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E6051A2395FF4500563650 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		96E6051B2395FF4500563650 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -151,6 +154,8 @@
 		96FA35B12395FFAB008CBCAE /* PUI */ = {
 			isa = PBXGroup;
 			children = (
+				9628223E23B0DFF700570DC1 /* PUINavigationController.h */,
+				9628223F23B0DFF700570DC1 /* PUINavigationController.m */,
 				96FA35B2239600B5008CBCAE /* PUIWebViewController.h */,
 				96FA35B3239600B5008CBCAE /* PUIWebViewController.m */,
 				96F7F8B3239D3F5F00FED365 /* PUITextField.h */,
@@ -298,6 +303,7 @@
 				96E6052A2395FF4800563650 /* main.m in Sources */,
 				96E6051C2395FF4500563650 /* AppDelegate.m in Sources */,
 				9628223B23A8B67900570DC1 /* PUIUtil.m in Sources */,
+				9628224023B0DFF700570DC1 /* PUINavigationController.m in Sources */,
 				96F7F8B5239D3F5F00FED365 /* PUITextField.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

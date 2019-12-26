@@ -8,23 +8,26 @@
 
 #import <UIKit/UIKit.h>
 #import <WebKit/WebKit.h>
-#import <JavaScriptCore/JavaScriptCore.h>
 #import "PUITextField.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface PUIWebViewController : UIViewController
 
+@property (strong, nonatomic) NSString *notificationId;
+
 @property (strong, nonatomic) PUIWebViewController *cacheVC;
 @property (strong, nonatomic) WKWebView *webview;
 @property (strong, nonatomic) WKWebViewConfiguration *webviewConfig;
 @property (strong, nonatomic) WKUserContentController *userContentController;
-@property (strong, nonatomic) JSContext *jsContext;
 @property (strong, nonatomic) NSString *url;
 @property (strong, nonatomic) NSString *miniProgramPath;
 @property (strong, nonatomic) NSMutableDictionary *coverViewsWithKeyValue;
-@property bool isMiniProgram;
 @property bool isDocumentReady;
+
+- (void)postNotification:(NSDictionary *)userInfo;
+- (void)onReceiveNotification:(NSNotification *)notification;
+- (void)disposeUserInfo:(NSDictionary *)userInfo;
 
 - (instancetype) initWithURLString:(NSString *)urlString;
 - (void) initWebView;
@@ -32,16 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) injectWebViewBaseScript:(WKUserContentController *)userContentController;
 - (void) injectReadyScript:(WKUserContentController *)userContentController;
 
-- (void) initJSContext;
-
-- (void) dispenseMessage:(NSString *)message;
-- (void) sendMessageToWebview:(NSString *)message;
-- (void) sendMessageToJSContext:(NSString *)message;
-- (void) sendMessageToNative:(NSString *)message;
-
 - (void) loadURLWithString:(NSString *)urlString;
 - (void) loadMiniProgramWithString:(NSString *)urlString;
-- (void) loadNormalWebPageWithString:(NSString *)urlString;
 - (void) changeMiniProgramRoute:(NSString *)pathString;
 - (void) inputValueChange:(PUITextField *)puiTextField;
 

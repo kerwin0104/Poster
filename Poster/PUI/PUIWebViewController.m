@@ -10,6 +10,7 @@
 #import "PUIUtil.h"
 
 uint coverViewId = 0;
+uint notificationId = 0;
 
 @interface PUIWebViewController () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
 
@@ -20,12 +21,33 @@ uint coverViewId = 0;
 - (instancetype)initWithURLString:(NSString *)urlString {
     self = [super init];
     if (self) {
+        self.notificationId = [NSString stringWithFormat:@"webview-%u", notificationId++];
         _coverViewsWithKeyValue = [NSMutableDictionary dictionary];
         [self initWebView];
         [self loadURLWithString:urlString];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onReceiveNotification:) name:@"pui-notification" object:nil];
     }
     return self;
 }
+
+/* 消息系统 */
+- (void)onReceiveNotification:(NSNotification *)notification {
+    [self disposeUserInfo:notification.userInfo];
+}
+
+- (void)disposeUserInfo:(NSDictionary *)userInfo {
+    if ([userInfo[@"to"] isEqualToString:_notificationId]) {
+        NSString *userInfoString = [PUIUtil parseNSDictionary2NSString:userInfo];
+        NSString *evalScriptString = [NSString stringWithFormat:@"__$onReceiveNotification__(%@)", userInfoString];
+        [_webview evaluateJavaScript:evalScriptString completionHandler:nil];
+    }
+}
+
+- (void)postNotification:(NSDictionary *)userInfo {
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"pui-notification" object:nil userInfo:userInfo];
+}
+/* /消息系统 */
 
 /* 初始化webview */
 - (void)initWebView {
@@ -46,17 +68,22 @@ uint coverViewId = 0;
 }
 
 - (void)addScriptMessageHandlers:(WKUserContentController *)userContentController {
-    [userContentController addScriptMessageHandler:self name:@"message"];
+    [userContentController addScriptMessageHandler:self name:@"notification"];
+    
     [userContentController addScriptMessageHandler:self name:@"rpc"];
     [userContentController addScriptMessageHandler:self name:@"DocumentReady"];
 }
 
 - (void)injectWebViewBaseScript:(WKUserContentController *)userContentController {
-    NSString *baseStr = [PUIUtil readScriptWithPath:@"www/script/base"];
+    NSString *envSetterStr = [NSString stringWithFormat:@"this.__env__ = 'webview';this.__notificationId__='%@'", self.notificationId];
+    WKUserScript *envSetterScript = [[WKUserScript alloc] initWithSource:envSetterStr injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+    [userContentController addUserScript:envSetterScript];
+    
+    NSString *baseStr = [PUIUtil readScriptWithPath:@"www/script/libs/base"];
     WKUserScript *baseScript = [[WKUserScript alloc] initWithSource:baseStr injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
     [userContentController addUserScript:baseScript];
     
-    NSString *baseWebviewStr = [PUIUtil readScriptWithPath:@"www/script/webviewBase"];
+    NSString *baseWebviewStr = [PUIUtil readScriptWithPath:@"www/script/libs/webview"];
     WKUserScript *baseWebviewScript = [[WKUserScript alloc] initWithSource:baseWebviewStr injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
     [userContentController addUserScript:baseWebviewScript];
 }
@@ -68,53 +95,6 @@ uint coverViewId = 0;
 }
 // https://github.com/marcuswestin/WebViewJavascriptBridge
 /* /初始化webview */
-
-/* 初始化jscore */
-- (void)initJSContext {
-    __weak typeof(self) weakSelf = self;
-    _jsContext = [[JSContext alloc] init];
-    _jsContext.exceptionHandler = ^(JSContext *context, JSValue *exceptionValue) {
-        NSLog(@"异常信息：%@", exceptionValue);
-    };
-    _jsContext[@"postMessage"] = ^(NSString *type, NSString *args){
-        NSLog(@"jscontext type:%@, args:%@", type, args);
-        if ([type isEqualToString:@"message"]) {
-            if (weakSelf != nil) {
-                [weakSelf dispenseMessage:args];
-            }
-        }
-    };
-    NSString *baseStr = [PUIUtil readScriptWithPath:@"www/script/base"];
-    [_jsContext evaluateScript:baseStr];
-    NSString *baseJSCoreStr = [PUIUtil readScriptWithPath:@"www/script/jsCoreBase"];
-    [_jsContext evaluateScript:baseJSCoreStr];
-    NSString *miniprogramStr = [PUIUtil readScriptWithPath:@"miniprogram/test/main"];
-    [_jsContext evaluateScript:miniprogramStr];
-    
-}
-/* /初始化jscore */
-
-/* 消息传递 */
-- (void)dispenseMessage:(NSString *)message {
-    NSLog(@"dispenseMessage: %@", message);
-    NSDictionary *dict = [PUIUtil parseNSStringToNSDictionary:message];
-    NSString *to = [dict objectForKey:@"to"];
-    if ([to isEqualToString:@"WEBVIEW"]) {
-        [self sendMessageToWebview:message];
-    }
-    if ([to isEqualToString:@"JSCORE"]) {
-        [self sendMessageToJSContext:message];
-    }
-}
-- (void)sendMessageToWebview:(NSString *)message {
-    NSString *jsStr = [NSString stringWithFormat:@"tunnel.message.trigger('%@')", message];
-    [_webview evaluateJavaScript:jsStr completionHandler:nil];
-}
-- (void)sendMessageToJSContext:(NSString *)message {
-    NSString *jsStr = [NSString stringWithFormat:@"tunnel.message.trigger('%@')", message];
-    [_jsContext evaluateScript:jsStr];
-}
-/* /消息传递 */
 
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -128,7 +108,7 @@ uint coverViewId = 0;
         NSLog(@"New view controller was pushed");
     } else if ([viewControllers indexOfObject:self] == NSNotFound) {
         NSLog(@"View controller was popped");
-        [_userContentController removeScriptMessageHandlerForName:@"message"];
+        [_userContentController removeScriptMessageHandlerForName:@"notification"];
         [_userContentController removeScriptMessageHandlerForName:@"rpc"];
         [_userContentController removeScriptMessageHandlerForName:@"DocumentReady"];
     }
@@ -140,10 +120,10 @@ uint coverViewId = 0;
         NSString *body = message.body;
         NSData *data = [body dataUsingEncoding:NSUTF8StringEncoding];
         NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-        NSLog(@"rpc： %@", body);
+//        NSLog(@"rpc： %@", body);
         
         if ([[dict objectForKey:@"method"] isEqualToString:@"log"]) {
-            NSLog(@"js log: %@", [dict objectForKey:@"args"]);
+//            NSLog(@"js log: %@", [dict objectForKey:@"args"]);
         }
         
         if ([[dict objectForKey:@"method"] isEqualToString:@"navigateTo"]) {
@@ -197,45 +177,25 @@ uint coverViewId = 0;
     } else if ([message.name isEqualToString:@"DocumentReady"]) {
         _isDocumentReady = YES;
 //        [self sendMessageToWebview:@"{fsjd:dfds}"];
-        [self initJSContext];
         [_webview evaluateJavaScript:[NSString stringWithFormat:@"location.href='#%@';", _miniProgramPath] completionHandler:nil];
-    } else if ([message.name isEqualToString:@"message"]) {
-        _isDocumentReady = YES;
-//        [self sendMessageToWebview:@"{fsjd:dfds}"];
-//        [_webview evaluateJavaScript:[NSString stringWithFormat:@"location.href='#%@';", _miniProgramPath] completionHandler:nil];
-        NSLog(@"message: %@", message.body);
-        [self dispenseMessage:message.body];
+    } else if ([message.name isEqualToString:@"notification"]) {
+        [self postNotification:[PUIUtil parseNSStringToNSDictionary:message.body]];
     }
 }
 
 - (void)loadURLWithString:(NSString *)urlString {
-    static NSString *miniprogramProtocolString = @"miniprogram://";
-    if ([urlString rangeOfString:miniprogramProtocolString].location == 0) {
-        // 小程序协议
-        _isMiniProgram = YES;
-        [self loadMiniProgramWithString:urlString];
-        [_cacheVC loadURLWithString:urlString];
-    } else {
-        // 常规协议
-        _isMiniProgram = NO;
-        [self loadNormalWebPageWithString:urlString];
-    }
+    [self loadMiniProgramWithString:urlString];
+    [_cacheVC loadURLWithString:urlString];
 }
 
 - (void) loadMiniProgramWithString:(NSString *)urlString {
     _isDocumentReady = NO;
     _url = urlString;
-    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"www/miniprogram" ofType:@"html"];
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"www/view" ofType:@"html"];
     NSURL *url = [NSURL fileURLWithPath:filePath];
     
     [_webview loadFileURL:url allowingReadAccessToURL:[NSURL fileURLWithPath:[NSBundle mainBundle].bundlePath]];
     [self.view addSubview:_webview];
-}
-              
-- (void) loadNormalWebPageWithString:(NSString *)urlString {
-    _isDocumentReady = NO;
-    _url = urlString;
-    [_webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:urlString]]];
 }
 
 - (void)changeMiniProgramRoute:(NSString *)pathString {
@@ -259,21 +219,10 @@ uint coverViewId = 0;
 {
     if (context == @"WebKitContext") {
         // NSLog(@"WebKitContext object %@ change %@", object, change);
-        [_webview evaluateJavaScript:[NSString stringWithFormat:@"nativeViewEventCenter.trigger('-9999', 'rerender');"] completionHandler:nil];
+//        [_webview evaluateJavaScript:[NSString stringWithFormat:@"nativeViewEventCenter.trigger('-9999', 'rerender');"] completionHandler:nil];
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
-
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end

@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *) readScriptWithPath:(NSString *)path;
 + (NSDictionary *) parseNSStringToNSDictionary:(NSString *)jsonString;
++ (NSString *)parseNSDictionary2NSString:(NSDictionary *)dictionary;
 
 @end
 

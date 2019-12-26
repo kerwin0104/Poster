@@ -1,4 +1,3 @@
-
 // 用户业务代码
 Vue.component('native-input', {
   model: {
@@ -64,7 +63,7 @@ Vue.component('native-input', {
     })
   },
   template: '<div ref="el" style="border:1px solid #333; width: 200px; height: 30px; cursor: pointer; margin-top: 100px;" @foucs="foucs">{{value}}</div>'
-})
+});
 
 const Home = { 
 	template: '<div style="background: gray;"><h3>home</h3><a @click="toOther" href="javascript:;">去另一个页面</a></div>',
@@ -73,7 +72,8 @@ const Home = {
 			rpc.call('navigateTo', '/input-demo');
 		}
 	}
-}
+};
+
 const InputDemo = { 
 	data() {
 		var data = {};
@@ -86,7 +86,7 @@ const InputDemo = {
 			rpc.call('navigateTo', '/home');
 		}
 	}
-}
+};
 
 const routes = [
   { path: '/home', component: Home },
@@ -95,8 +95,11 @@ const routes = [
 
 const router = new VueRouter({
   routes // (缩写) 相当于 routes: routes
-})
+});
 
 const app = new Vue({
   router
 }).$mount('#app');
+
+
+

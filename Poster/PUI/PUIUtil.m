@@ -21,4 +21,16 @@
     return [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
 }
 
++ (NSString *)parseNSDictionary2NSString:(NSDictionary *)dictionary {
+    NSString *string;
+    NSError *error;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary options:0 error:&error];
+    if (!data) {
+        NSLog(@"NSDictionary2NSString Error: %@", error);
+    } else {
+        string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    }
+    return string;
+}
+
 @end

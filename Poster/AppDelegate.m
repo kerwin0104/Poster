@@ -7,7 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "PUI/PUIWebViewController.h"
+#import "PUI/PUINavigationController.h"
 
 @interface AppDelegate ()
 
@@ -19,11 +19,8 @@
     // Override point for customization after application launch.
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     
-    PUIWebViewController *rvc = [[PUIWebViewController alloc] initWithURLString:@"miniprogram://example"];
-    [rvc changeMiniProgramRoute:@"/home"];
-    
-    UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:rvc];
-    
+    PUINavigationController *nvc = [[PUINavigationController alloc] init];
+    [nvc loadMiniProgram];
     self.window.rootViewController = nvc;
     
     [self.window makeKeyWindow];
