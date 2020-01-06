@@ -1,3 +1,0 @@
-var x = new XMLHTTPRequest;
-x..setRequestHeader('Content-type','application/x-www-form-urlencoded');
-x.open('put', )

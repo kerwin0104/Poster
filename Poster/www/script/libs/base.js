@@ -1,5 +1,5 @@
 // 系统基础库
-(function (process) {
+function __baseScript__ (process) {
     const m = {};
     m.env = process.__env__;
     m.id = process.__notificationId__;
@@ -41,74 +41,84 @@
     m.postNotification = postNotification; 
     /* /全局消息 */
 
+    /* 事件 */
+    const event = {};
+    const eventHandlers = {};
+    let globalEventId = 0;
+    event.getEventId = function eventGetEventId(target) {
+        if (!target.__eventId__) {
+            target.__eventId__ = globalEventId++;
+        }
+        return target.__eventId__;
+    }
+    event.on = function eventOn(target, eventName, callback) {
+        const eventId = this.getEventId(target);
+        const handler = {
+            target,
+            callback,
+        };
+        if (!eventHandlers[eventId]) {
+            eventHandlers[eventId] = {};
+        }
+        if(!eventHandlers[eventId][eventName]) {
+            eventHandlers[eventId][eventName] = [ handler ];
+        } else {
+            eventHandlers[eventId][eventName].push(handler);
+        }
+    }
+    event.off = function eventOff (target, eventName, callback) {
+        if (!target) return;
+        const eventId = this.getEventId(target);
+        if (!eventName) {
+            delete eventHandlers[eventId];
+            return;
+        }
+        if (!callback) {
+            delete eventHandlers[eventId][eventName];
+            return;
+        }
+        // 有callback参数
+        if (!eventHandlers[eventId]) {
+            return;
+        }
+        if (!eventHandlers[eventId][eventName]) {
+            return;
+        }
+        eventHandlers[eventId][eventName] = eventHandlers[eventId][eventName].filter(handler => handler.callback != callback);
+    }
+    event.trigger = function eventTrigger (target, eventName, eventObject, data) {
+        if (!target) return;
+        const eventId = this.getEventId(target);
+        if (!eventName) {
+            return;
+        }
+        if (!eventHandlers[eventId]) {
+            return;
+        }
+        if (!eventHandlers[eventId][eventName]) {
+            return;
+        }
+        eventHandlers[eventId][eventName].forEach(handler => {
+            handler.callback.call(this, eventObject, data);
+        });
+    }
+    m.event = event;
+    m.on = function (eventName, callback) {
+        this.event.on(this, eventName, callback);
+    }
+    m.off = function (eventName, callback) {
+        this.event.off(this, eventName, callback);
+    }
+    m.trigger = function (eventName, eventObject, data) {
+        this.event.trigger(this, eventName, eventObject, data);
+    }
+    /* /事件 */
+
     /* 打印日志 */
     m.log = function (content) {
         m.postNotification('log', JSON.stringify(content));
     }
     /* /打印日志 */
-
-    /* 事件系统 */
-    let eventId = 0;
-    let globalEventHandlers = {};
-    const event = {};
-	event.getEventIdFromTarget = function (targetObject) {
-        if (!targetObject.__eventId__) {
-            targetObject.__eventId__ = `event-id-${eventId++}`;
-        }
-        return targetObject.__eventId__;
-    }
-	event.getAllEventHandlersFromTarget = function (targetObject) {
-        const eventId = this.getEventIdFromTarget(targetObject);
-		if (!globalEventHandlers[eventId]) {
-            globalEventHandlers[eventId] = {};
-		}
-		return globalEventHandlers[eventId];
-	}
-	event.getEventHandlersByEventTypeFromTarget = function (targetObject, eventType) {
-        const allEventHandlers = this.getAllEventHandlersFromTarget(targetObject);
-        if (!allEventHandlers[eventType]) {
-            allEventHandlers[eventType] = [];
-        }
-        return allEventHandlers[eventType];
-	}
-	event.on = function (targetObject, eventType, callback) {
-        const eventHandlers = this.getEventHandlersByEventTypeFromTarget(targetObject);
-        eventHandlers.push({
-            target: targetObject,
-            type: eventType,
-            callback: callback,
-        });
-	}
-	event.off = function (targetObject, eventType, callback) {
-        const allEventHandlers = this.getAllEventHandlersFromTarget(targetObject);
-		if (callback) {
-            const eventHandlers = this.getEventHandlersByEventTypeFromTarget(targetObject);
-            allEventHandlers[eventType] = eventHandlers.filter(handler => handler.callback != callback);
-		} else if (eventName) {
-            delete allEventHandlers[eventName];
-		} else {
-            const eventId = this.getEventIdFromTarget(targetObject);
-			delete globalEventHandlers[eventType];
-		}
-	}
-	event.trigger = function (targetObject, eventType, data) {
-		const eventHandlers = this.getEventHandlersByEventTypeFromTarget(targetObject, eventType);
-        const eventObject = {};
-        eventObject.target = targetObject;
-        eventObject.type = eventType;
-        eventObject.data = data;
-		eventHandlers.forEach((handler) => {
-            handler.callback.call(targetObject, eventObject);
-		});
-	}
-    m.event = event;
-    /* /事件系统 */
-
-
-
-
-
-
 
 	/* rpc方法 */
 	const rpc = {}
@@ -169,6 +179,10 @@
 	}
 	process.rpc = rpc;
 	/* /rpc方法 */
-})(this);
-
+}
+try {
+    __baseScript__(this);
+} catch (e) {
+    m.log(e);
+}
 

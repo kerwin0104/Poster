@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong, nonatomic) WKWebView *webview;
 @property (strong, nonatomic) WKWebViewConfiguration *webviewConfig;
 @property (strong, nonatomic) WKUserContentController *userContentController;
+@property (strong, nonatomic) NSMutableDictionary *reinforcedUIs;
+
 @property (strong, nonatomic) NSString *url;
 @property (strong, nonatomic) NSString *miniProgramPath;
 @property (strong, nonatomic) NSMutableDictionary *coverViewsWithKeyValue;
@@ -28,6 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)postNotification:(NSDictionary *)userInfo;
 - (void)onReceiveNotification:(NSNotification *)notification;
 - (void)disposeUserInfo:(NSDictionary *)userInfo;
+
+- (void)disposeReinforcedUI:(NSDictionary *)userInfo;
+- (void)createReinforcedUI:(NSDictionary *)userInfo;
+- (void)renderReinforcedUI:(NSDictionary *)userInfo; 
+
 
 - (instancetype) initWithURLString:(NSString *)urlString;
 - (void) initWebView;

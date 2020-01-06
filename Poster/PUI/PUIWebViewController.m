@@ -12,7 +12,7 @@
 uint coverViewId = 0;
 uint notificationId = 0;
 
-@interface PUIWebViewController () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
+@interface PUIWebViewController () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, UITextViewDelegate>
 
 @end
 
@@ -23,6 +23,7 @@ uint notificationId = 0;
     if (self) {
         self.notificationId = [NSString stringWithFormat:@"webview-%u", notificationId++];
         _coverViewsWithKeyValue = [NSMutableDictionary dictionary];
+        _reinforcedUIs = [NSMutableDictionary dictionary];
         [self initWebView];
         [self loadURLWithString:urlString];
         
@@ -45,9 +46,94 @@ uint notificationId = 0;
 }
 
 - (void)postNotification:(NSDictionary *)userInfo {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"pui-notification" object:nil userInfo:userInfo];
+    /*
+     {
+        data =     {
+            args = ();
+            componentId = 0;
+            componentName = "/home";
+            methodName = created;
+            methodType = lifetime;
+            type = "call-method";
+        };
+        from = "webview-0";
+        to = "jscore-0";
+     }
+     */
+    NSLog(@"userinfo: %@", userInfo);
+    if ([userInfo[@"to"] isEqualToString:@"ui"]) {
+        [self disposeReinforcedUI:userInfo];
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"pui-notification" object:nil userInfo:userInfo];
+    }
 }
 /* /消息系统 */
+
+/* 处理增强ui */
+- (void)disposeReinforcedUI:(NSDictionary *)userInfo {
+    NSDictionary *data = userInfo[@"data"];
+    if ([data[@"type"] isEqualToString:@"layout"]) {
+        if ([data[@"methodName"] isEqualToString:@"create"]) {
+            [self createReinforcedUI:userInfo];
+        }
+    }
+}
+
+- (void)createReinforcedUI:(NSDictionary *)userInfo {
+    NSDictionary *data = userInfo[@"data"];
+    if ([data[@"methodName"] isEqualToString:@"create"]) {
+        if ([data[@"componentName"] isEqualToString:@"native-textarea"]) {
+            UITextView *textview = [[UITextView alloc] init];
+            textview.autocapitalizationType = UITextAutocapitalizationTypeNone;
+            textview.autocorrectionType = UITextAutocorrectionTypeNo;
+            textview.text = data[@"args"][@"value"];
+            textview.delegate = self;
+            [_webview.scrollView addSubview:textview];
+            [_reinforcedUIs setObject:textview forKey:data[@"componentId"]];
+            
+            [self renderReinforcedUI:userInfo];
+        }
+    }
+    
+    if ([data[@"methodName"] isEqualToString:@"rerender"]) {
+        [self renderReinforcedUI:userInfo];
+    }
+}
+
+- (void)renderReinforcedUI:(NSDictionary *)userInfo {
+    NSDictionary *data = userInfo[@"data"];
+    NSDictionary *style = data[@"args"][@"style"];
+    UIView *view = [_reinforcedUIs objectForKey: data[@"componentId"]];
+    [view setBackgroundColor: [UIColor colorWithRed:0 green:0 blue:1 alpha:.3]];
+    [view setFrame:CGRectMake([style[@"x"] floatValue], [style[@"y"] floatValue], [style[@"width"] floatValue], [style[@"height"] floatValue])];
+}
+
+- (void)textViewDidChange:(UITextView *)textView {
+    NSString *componentId;
+    for (NSString* key in self.reinforcedUIs) {
+        id value = [self.reinforcedUIs objectForKey:key];
+        if ([value isEqual:textView]) {
+            componentId = key;
+            break;
+        }
+    }
+    if (componentId != nil) {
+        NSDictionary *userInfo = @{
+            @"from": @"ui",
+            @"to": self.notificationId,
+            @"data": @{
+                @"type": @"event",
+                @"eventName": @"input",
+                @"componentId": componentId,
+                @"data": textView.text,
+            },
+        };
+        [self disposeUserInfo:userInfo];
+    }
+}
+
+
+/* /处理增强ui */
 
 /* 初始化webview */
 - (void)initWebView {
@@ -120,7 +206,6 @@ uint notificationId = 0;
         NSString *body = message.body;
         NSData *data = [body dataUsingEncoding:NSUTF8StringEncoding];
         NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-//        NSLog(@"rpc： %@", body);
         
         if ([[dict objectForKey:@"method"] isEqualToString:@"log"]) {
 //            NSLog(@"js log: %@", [dict objectForKey:@"args"]);

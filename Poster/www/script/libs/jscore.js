@@ -1,62 +1,90 @@
-(function (process) {
+function __jscoreScript__ (process) {
+    const util = {};
+    process.util = util;
 	
-	// 创建页面相关
-    const pageDescriptions = [];
-	const pageControllers = {};
-	const pageInstances = {};
+	const pageDescriptions = [];
+	const componentControllers = {};
 
-    const pageUtil = {};
-    process.pageUtil = pageUtil;
-
-	pageUtil.createPage = function (path) {
-		return function (pageController) {
-			pageControllers[path] = pageController;
-            const pageDescription = pageUtil.createPageDescription(path, pageController);
-            pageDescriptions.push(pageDescription);
+	function createPage (path) {
+		return function (componentController) {
+			componentControllers[path] = componentController;
+            const componentDescription = createComponentDescription(path, componentController);
+            pageDescriptions.push(componentDescription);
 		};
 	};
+    util.createPage = createPage;
 
-    pageUtil.getPageDescriptions = function () {
-        return pageDescriptions;
-    } 
-
-	pageUtil.createPageDescription = function (path, pageController) {
-		const pageDescription = {};
+	function createComponentDescription (path, componentController) {
+		const componentDescription = {};
 		const methods = [];
-
-		for (let key in pageController) {
-			if (typeof pageController[key] === 'function') {
+		for (let key in componentController) {
+			if (typeof componentController[key] === 'function') {
 				methods.push(key);
 			}
 		};
-
-		pageDescription.path = path;
-		pageDescription.template = pageController.template;
-		pageDescription.methods = methods;
-		pageDescription.data = pageController.data;
-		return pageDescription;
+		componentDescription.path = path;
+		componentDescription.style = componentController.style;
+		componentDescription.template = componentController.template;
+		componentDescription.methods = methods;
+		componentDescription.data = componentController.data;
+		return componentDescription;
 	}
 
-	pageUtil.createPageInstance = function (pageId, path) {
-		const pageController = pageControllers[path];
-		const pageInstance = Object.assign({}, pageController);
-		pageInstance.data = JSON.parse(JSON.stringify(pageInstance.data || {}));
-		pageInstance.setData = function (data, callback) {
+	const componentInstances = {};
+	function createComponentInstance (notification) {
+        const webviewId = notification.from;
+        const { componentId, componentName, type, methodName, args } = notification.data;
+		const componentController = componentControllers[componentName];
+		const componentInstance = Object.assign({}, componentController);
+        componentInstance.__webviewId__ = webviewId;
+        componentInstance.__componentId__ = componentId;
+		componentInstance.data = JSON.parse(JSON.stringify(componentInstance.data || {}));
+		componentInstance.setData = function (data, callback) {
 			const newData = Object.assign({}, this.data, data);
-			const options = {};
-			options.pageId = this.pageId;
-			options.data = newData;
-
-			rpcWebViewClient.module('render')
-				.call('setData', options)
-				.then(() => {
-					this.data = newData;
-					if (typeof callback === 'function') {
-						callback(newData);
-					}
-				});
+            m.postNotification(this.__webviewId__, {
+                type: 'set-data',
+                componentId,
+                componentName,
+                data,
+            });
 		}
-		return pageInstance;
+        componentInstances[`${webviewId}-${componentId}`] = componentInstance;
 	}	
-})(this);
 
+    function callInstanceMethod (notification) {
+        const webviewId = notification.from;
+        const { componentId, methodType, methodName, args } = notification.data;
+        if (methodType === 'lifetime') {
+            if (methodName === 'created') {
+                createComponentInstance(notification);
+            }
+        } else {
+            m.log('else .........');
+            const componentInstance = componentInstances[`${webviewId}-${componentId}`];
+            componentInstance[methodName].apply(componentInstance, args);
+        }
+    }
+
+    m.watchNotification(notification => {
+        const { data } = notification;
+        if (notification.data === 'webview-ready') {
+            const webviewId = notification.from;
+            m.postNotification(webviewId, {
+                type: 'render',
+                data: pageDescriptions,
+            });
+        } else if (data && data.type === 'call-method') {
+            try {
+                callInstanceMethod(notification);
+            } catch (e) {
+                m.log(e);
+            }
+        }
+    });
+
+}
+try {
+    __jscoreScript__(this);
+} catch (e) {
+    m.log(e);
+}
